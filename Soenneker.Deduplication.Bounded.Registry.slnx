@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/renovate.json" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/build-and-test.yml" />
+    <File Path=".github/workflows/publish-package.yml" />
+  </Folder>
+  <Project Path="src/Soenneker.Deduplication.Bounded.Registry.csproj" />
+  <Project Path="test/Soenneker.Deduplication.Bounded.Registry.Tests/Soenneker.Deduplication.Bounded.Registry.Tests.csproj" />
+</Solution>
