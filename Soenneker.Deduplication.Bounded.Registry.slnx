@@ -4,8 +4,13 @@
   </Folder>
   <Folder Name="/.github/workflows/">
     <File Path=".github/workflows/build-and-test.yml" />
+    <File Path=".github/workflows/codeql.yml" />
     <File Path=".github/workflows/publish-package.yml" />
   </Folder>
-  <Project Path="src/Soenneker.Deduplication.Bounded.Registry.csproj" />
-  <Project Path="test/Soenneker.Deduplication.Bounded.Registry.Tests/Soenneker.Deduplication.Bounded.Registry.Tests.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Soenneker.Deduplication.Bounded.Registry/Soenneker.Deduplication.Bounded.Registry.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Soenneker.Deduplication.Bounded.Registry.Tests/Soenneker.Deduplication.Bounded.Registry.Tests.csproj" />
+  </Folder>
 </Solution>
