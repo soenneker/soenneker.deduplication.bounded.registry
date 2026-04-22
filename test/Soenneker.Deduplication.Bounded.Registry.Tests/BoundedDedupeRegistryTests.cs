@@ -1,22 +1,21 @@
 using System.Threading.Tasks;
 using Soenneker.Deduplication.Bounded.Abstract;
 using Soenneker.Deduplication.Bounded.Registry.Abstract;
-using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.Deduplication.Bounded.Registry.Tests;
 
-[Collection("Collection")]
-public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public sealed class BoundedDedupeRegistryTests : HostedUnitTest
 {
     private readonly IBoundedDedupeRegistry _util;
 
-    public BoundedDedupeRegistryTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public BoundedDedupeRegistryTests(Host host) : base(host)
     {
         _util = Resolve<IBoundedDedupeRegistry>(true);
     }
 
-    [Fact]
+    [Test]
     public void Get_same_key_and_maxSize_returns_same_instance()
     {
         IBoundedDedupe a = _util.GetSync("scope-a", 10_000, TestContext.Current.CancellationToken);
@@ -25,7 +24,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.Equal(10_000, a.MaxSize);
     }
 
-    [Fact]
+    [Test]
     public async Task Get_async_same_key_and_maxSize_returns_same_instance()
     {
         IBoundedDedupe a = await _util.Get("scope-b", 5_000, TestContext.Current.CancellationToken);
@@ -34,7 +33,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.Equal(5_000, a.MaxSize);
     }
 
-    [Fact]
+    [Test]
     public void Get_different_keys_returns_different_instances()
     {
         IBoundedDedupe a = _util.GetSync("scope-1", 1_000, TestContext.Current.CancellationToken);
@@ -42,7 +41,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.NotSame(a, b);
     }
 
-    [Fact]
+    [Test]
     public void Get_same_key_different_maxSize_returns_same_instance_first_maxSize_wins()
     {
         IBoundedDedupe a = _util.GetSync("scope-same", 1_000, TestContext.Current.CancellationToken);
@@ -51,7 +50,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.Equal(1_000, a.MaxSize);
     }
 
-    [Fact]
+    [Test]
     public void TryGet_returns_false_when_key_not_created()
     {
         bool found = _util.TryGet("never-created", out IBoundedDedupe? value);
@@ -59,7 +58,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.Null(value);
     }
 
-    [Fact]
+    [Test]
     public void TryGet_returns_true_and_instance_after_Get()
     {
         IBoundedDedupe created = _util.GetSync("scope-try", 500, TestContext.Current.CancellationToken);
@@ -69,7 +68,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.Same(created, value);
     }
 
-    [Fact]
+    [Test]
     public void GetSync_returns_usable_dedupe()
     {
         IBoundedDedupe dedupe = _util.GetSync("scope-use", 100, TestContext.Current.CancellationToken);
@@ -78,7 +77,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.True(dedupe.Contains("item-1"));
     }
 
-    [Fact]
+    [Test]
     public async Task Get_returns_usable_dedupe()
     {
         IBoundedDedupe dedupe = await _util.Get("scope-async-use", 100, TestContext.Current.CancellationToken);
@@ -86,7 +85,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         Assert.False(dedupe.TryMarkSeen("item-1"));
     }
 
-    [Fact]
+    [Test]
     public void Dispose_does_not_throw()
     {
         IBoundedDedupeRegistry registry = Resolve<IBoundedDedupeRegistry>(true);
@@ -94,7 +93,7 @@ public sealed class BoundedDedupeRegistryTests : FixturedUnitTest
         registry.Dispose();
     }
 
-    [Fact]
+    [Test]
     public async Task DisposeAsync_does_not_throw()
     {
         IBoundedDedupeRegistry registry = Resolve<IBoundedDedupeRegistry>(true);
