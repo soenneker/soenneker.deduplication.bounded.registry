@@ -26,7 +26,14 @@ public sealed class BoundedDedupeRegistry : IBoundedDedupeRegistry
     public bool TryGet(string key, out IBoundedDedupe? value) =>
         _dictionary.TryGet(key, out value);
 
+    /// <summary>
+    /// Releases resources used by the current instance.
+    /// </summary>
     public void Dispose() => _dictionary.Dispose();
     
+    /// <summary>
+    /// Asynchronously releases resources used by the current instance.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public ValueTask DisposeAsync() => _dictionary.DisposeAsync();
 }
