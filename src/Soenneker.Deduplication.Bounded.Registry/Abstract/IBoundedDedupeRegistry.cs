@@ -21,10 +21,17 @@ public interface IBoundedDedupeRegistry : IDisposable, IAsyncDisposable
     /// <summary>
     /// Synchronously gets the bounded dedupe for <paramref name="key"/>, creating and caching it with <paramref name="maxSize"/> if missing.
     /// </summary>
+    /// <param name="key">Key used to locate the target entry.</param>
+    /// <param name="maxSize">Maximum number of entries to retain.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The resulting bounded Dedupe.</returns>
     IBoundedDedupe GetSync(string key, int maxSize, System.Threading.CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Attempts to get a cached bounded dedupe for <paramref name="key"/> without creating one.
     /// </summary>
+    /// <param name="key">Key used to locate the target entry.</param>
+    /// <param name="value">Receives the matching value when the lookup succeeds.</param>
+    /// <returns>true if the requested update was applied; otherwise, false.</returns>
     bool TryGet(string key, out IBoundedDedupe? value);
 }
