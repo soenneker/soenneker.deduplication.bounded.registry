@@ -34,4 +34,26 @@ public interface IBoundedDedupeRegistry : IDisposable, IAsyncDisposable
     /// <param name="value">Receives the matching value when the lookup succeeds.</param>
     /// <returns>true if the requested update was applied; otherwise, false.</returns>
     bool TryGet(string key, out IBoundedDedupe? value);
+
+    /// <summary>
+    /// Removes the dedupe instance for <paramref name="key"/> so a later lookup creates a new one.
+    /// </summary>
+    /// <param name="key">Registry key to remove.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns><c>true</c> when an instance was removed; otherwise <c>false</c>.</returns>
+    ValueTask<bool> Remove(string key, System.Threading.CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Synchronously removes the dedupe instance for <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key">Registry key to remove.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns><c>true</c> when an instance was removed; otherwise <c>false</c>.</returns>
+    bool RemoveSync(string key, System.Threading.CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes every cached dedupe instance.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    ValueTask Clear(System.Threading.CancellationToken cancellationToken = default);
 }

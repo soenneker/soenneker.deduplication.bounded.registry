@@ -5,43 +5,63 @@
 
 # Soenneker.Deduplication.Bounded.Registry
 
-A keyed registry of bounded dedupe instances backed by `Soenneker.Dictionaries.Singletons.SingletonDictionary{TValue,T1}`.
+A thread-safe registry that creates and reuses one bounded in-memory deduplicator per string key.
 
-## Install
+## Installation
 
 ```bash
 dotnet add package Soenneker.Deduplication.Bounded.Registry
 ```
 
-## Quick start
+## Registration
 
 ```csharp
 using Soenneker.Deduplication.Bounded.Registry.Registrars;
-using Microsoft.Extensions.DependencyInjection;
 
-var services = new ServiceCollection();
-var result = services.AddBoundedDedupeRegistryAsSingleton();
+services.AddBoundedDedupeRegistryAsSingleton();
 ```
 
-Adds `IBoundedDedupeRegistry` as a singleton service.
+Use the singleton registration when keys should share dedupe history across requests. The scoped registration creates a separate registry and separate history for each dependency-injection scope:
 
-## What you get
+```csharp
+services.AddBoundedDedupeRegistryAsScoped();
+```
 
-- `IBoundedDedupeRegistry` — A keyed registry of bounded dedupe instances backed by `Soenneker.Dictionaries.Singletons.SingletonDictionary{TValue,T1}`.
-- `BoundedDedupeRegistryRegistrar` — A keyed registry of bounded dedupe instances.
+## Usage
 
-## API at a glance
+```csharp
+using Soenneker.Deduplication.Bounded.Abstract;
+using Soenneker.Deduplication.Bounded.Registry.Abstract;
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `IBoundedDedupeRegistry.Get(key, maxSize, cancellationToken)` | Gets the bounded dedupe for `key`, creating and caching it with `maxSize` if missing. | The cached or newly created `IBoundedDedupe`. |
-| `IBoundedDedupeRegistry.GetSync(key, maxSize, cancellationToken)` | Synchronously gets the bounded dedupe for `key`, creating and caching it with `maxSize` if missing. | The resulting bounded Dedupe. |
-| `IBoundedDedupeRegistry.TryGet(key, value)` | Attempts to get a cached bounded dedupe for `key` without creating one. | true if the requested update was applied; otherwise, false. |
-| `BoundedDedupeRegistryRegistrar.AddBoundedDedupeRegistryAsSingleton(services)` | Adds `IBoundedDedupeRegistry` as a singleton service. | The same service collection, so additional registrations can be chained. |
-| `BoundedDedupeRegistryRegistrar.AddBoundedDedupeRegistryAsScoped(services)` | Adds `IBoundedDedupeRegistry` as a scoped service. | The same service collection, so additional registrations can be chained. |
+public sealed class EventConsumer(IBoundedDedupeRegistry registry)
+{
+    public async ValueTask<bool> ShouldProcess(string tenantId, string eventId, CancellationToken cancellationToken)
+    {
+        IBoundedDedupe dedupe = await registry.Get(
+            key: $"tenant:{tenantId}",
+            maxSize: 100_000,
+            cancellationToken);
 
-## Practical notes
+        return dedupe.TryMarkSeen(eventId);
+    }
+}
+```
 
-- Cancellation stops pending work; it does not undo work that has already completed.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+The first successful `Get` or `GetSync` for a key creates its instance. Later calls with the same key return that instance, even when they supply a different `maxSize`; choose the size consistently at the call site.
+
+## Managing registry keys
+
+Each distinct registry key owns another bounded set. The sets are bounded, but the number of registry keys is not, so do not use arbitrary user input as a key without controlling its cardinality.
+
+Remove keys that are no longer active:
+
+```csharp
+await registry.Remove($"tenant:{tenantId}", cancellationToken);
+
+// Or discard all cached histories:
+await registry.Clear(cancellationToken);
+```
+
+After removal, a later `Get` creates an empty deduplicator with the newly supplied size. `TryGet` performs a lookup without creating anything.
+
+Disposing the registry releases its underlying cache. Do not use a registry or a deduplicator obtained from it after the registry has been disposed.

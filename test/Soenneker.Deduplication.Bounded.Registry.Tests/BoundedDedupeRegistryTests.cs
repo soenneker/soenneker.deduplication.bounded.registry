@@ -79,6 +79,21 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
+    public async Task Remove_discards_the_cached_history()
+    {
+        IBoundedDedupe first = await _util.Get("scope-remove", 100);
+        first.TryMarkSeen("item-1").Should().BeTrue();
+
+        (await _util.Remove("scope-remove")).Should().BeTrue();
+        _util.TryGet("scope-remove", out _).Should().BeFalse();
+
+        IBoundedDedupe replacement = await _util.Get("scope-remove", 200);
+        replacement.Should().NotBeSameAs(first);
+        replacement.MaxSize.Should().Be(200);
+        replacement.TryMarkSeen("item-1").Should().BeTrue();
+    }
+
+    [Test]
     public async Task Get_returns_usable_dedupe()
     {
         IBoundedDedupe dedupe = await _util.Get("scope-async-use", 100, System.Threading.CancellationToken.None);
