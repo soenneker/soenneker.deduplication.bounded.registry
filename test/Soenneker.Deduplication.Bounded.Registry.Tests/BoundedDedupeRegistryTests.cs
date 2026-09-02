@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.Deduplication.Bounded.Abstract;
 using Soenneker.Deduplication.Bounded.Registry.Abstract;
@@ -26,10 +27,10 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Get_async_same_key_and_maxSize_returns_same_instance()
+    public async Task Get_async_same_key_and_maxSize_returns_same_instance(CancellationToken cancellationToken)
     {
-        IBoundedDedupe a = await _util.Get("scope-b", 5_000, System.Threading.CancellationToken.None);
-        IBoundedDedupe b = await _util.Get("scope-b", 5_000, System.Threading.CancellationToken.None);
+        IBoundedDedupe a = await _util.Get("scope-b", 5_000, cancellationToken);
+        IBoundedDedupe b = await _util.Get("scope-b", 5_000, cancellationToken);
         a.Should().BeSameAs(b);
         a.MaxSize.Should().Be(5_000);
     }
@@ -79,24 +80,24 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Remove_discards_the_cached_history()
+    public async Task Remove_discards_the_cached_history(CancellationToken cancellationToken)
     {
-        IBoundedDedupe first = await _util.Get("scope-remove", 100);
+        IBoundedDedupe first = await _util.Get("scope-remove", 100, cancellationToken: cancellationToken);
         first.TryMarkSeen("item-1").Should().BeTrue();
 
-        (await _util.Remove("scope-remove")).Should().BeTrue();
+        (await _util.Remove("scope-remove", cancellationToken: cancellationToken)).Should().BeTrue();
         _util.TryGet("scope-remove", out _).Should().BeFalse();
 
-        IBoundedDedupe replacement = await _util.Get("scope-remove", 200);
+        IBoundedDedupe replacement = await _util.Get("scope-remove", 200, cancellationToken: cancellationToken);
         replacement.Should().NotBeSameAs(first);
         replacement.MaxSize.Should().Be(200);
         replacement.TryMarkSeen("item-1").Should().BeTrue();
     }
 
     [Test]
-    public async Task Get_returns_usable_dedupe()
+    public async Task Get_returns_usable_dedupe(CancellationToken cancellationToken)
     {
-        IBoundedDedupe dedupe = await _util.Get("scope-async-use", 100, System.Threading.CancellationToken.None);
+        IBoundedDedupe dedupe = await _util.Get("scope-async-use", 100, cancellationToken);
         dedupe.TryMarkSeen("item-1").Should().BeTrue();
         dedupe.TryMarkSeen("item-1").Should().BeFalse();
     }
@@ -110,10 +111,10 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task DisposeAsync_does_not_throw()
+    public async Task DisposeAsync_does_not_throw(CancellationToken cancellationToken)
     {
         IBoundedDedupeRegistry registry = Resolve<IBoundedDedupeRegistry>(true);
-        await registry.Get("dispose-async-test", 1, System.Threading.CancellationToken.None);
+        await registry.Get("dispose-async-test", 1, cancellationToken);
         await registry.DisposeAsync();
     }
 }
