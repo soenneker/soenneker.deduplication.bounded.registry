@@ -4,6 +4,7 @@ using Soenneker.Deduplication.Bounded.Abstract;
 using Soenneker.Deduplication.Bounded.Registry.Abstract;
 using Soenneker.Dictionaries.Singletons;
 namespace Soenneker.Deduplication.Bounded.Registry;
+/// <inheritdoc cref="IBoundedDedupeRegistry" />
 public sealed class BoundedDedupeRegistry : IBoundedDedupeRegistry
 {
     private readonly SingletonDictionary<IBoundedDedupe, int> _dictionary;
