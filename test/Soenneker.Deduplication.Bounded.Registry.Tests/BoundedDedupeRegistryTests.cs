@@ -27,7 +27,7 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Get_async_same_key_and_maxSize_returns_same_instance(CancellationToken cancellationToken)
+    public async ValueTask Get_async_same_key_and_maxSize_returns_same_instance(CancellationToken cancellationToken)
     {
         IBoundedDedupe a = await _util.Get("scope-b", 5_000, cancellationToken);
         IBoundedDedupe b = await _util.Get("scope-b", 5_000, cancellationToken);
@@ -80,7 +80,7 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Remove_discards_the_cached_history(CancellationToken cancellationToken)
+    public async ValueTask Remove_discards_the_cached_history(CancellationToken cancellationToken)
     {
         IBoundedDedupe first = await _util.Get("scope-remove", 100, cancellationToken: cancellationToken);
         first.TryMarkSeen("item-1").Should().BeTrue();
@@ -95,7 +95,7 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Get_returns_usable_dedupe(CancellationToken cancellationToken)
+    public async ValueTask Get_returns_usable_dedupe(CancellationToken cancellationToken)
     {
         IBoundedDedupe dedupe = await _util.Get("scope-async-use", 100, cancellationToken);
         dedupe.TryMarkSeen("item-1").Should().BeTrue();
@@ -111,7 +111,7 @@ public sealed class BoundedDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task DisposeAsync_does_not_throw(CancellationToken cancellationToken)
+    public async ValueTask DisposeAsync_does_not_throw(CancellationToken cancellationToken)
     {
         IBoundedDedupeRegistry registry = Resolve<IBoundedDedupeRegistry>(true);
         await registry.Get("dispose-async-test", 1, cancellationToken);
