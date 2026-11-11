@@ -46,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Soenneker.Deduplication.Bounded" Version="11.0.133" />
+        <PackageReference Include="Soenneker.Deduplication.Bounded" Version="11.0.134" />
         <PackageReference Include="Soenneker.Dictionaries.Singletons" Version="11.0.138" />
     </ItemGroup>
 </Project>
